@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Recording</title>
+</head>
+<body>
+    <video id="videoElement" autoplay style="width: 100%;height: 100%;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let stream;
+        let mediaRecorder;
+        let chunks = [];
+
+        async function setupCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+            } catch (err) {
+                console.error('Xato: Kameraga kirishda muammo yuz berdi', err);
+            }
+        }
+
+        function startRecording() {
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = function(e) {
+                chunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = function() {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const videoURL = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = videoURL;
+                a.download = 'recorded.webm';
+                document.body.appendChild(a);
+                a.click();
+            };
+
+            mediaRecorder.start();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCamera();
+            startRecording();
+        });
+    </script>
+</body>
+</html>
